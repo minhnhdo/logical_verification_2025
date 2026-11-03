@@ -70,7 +70,7 @@ theorem Nat.succ_neq_self (n : ℕ) :
   by
     induction n with
     | zero       => simp
-    | succ n' ih => simp [ih]
+    | succ n' ih => simp
 
 
 /- ## Structural Recursion
@@ -394,7 +394,7 @@ theorem length_zip {α β : Type} (xs : List α) (ys : List β) :
     length (zip xs ys) = min (length xs) (length ys) :=
   by
     induction xs generalizing ys with
-    | nil           => simp [min, length]
+    | nil           => simp [min, length, zip]
     | cons x xs' ih =>
       cases ys with
       | nil        => rfl
@@ -434,8 +434,8 @@ we may need to recurse (or invoke the induction hypothesis) on several child
 nodes. -/
 
 def mirror {α : Type} : Tree α → Tree α
-  | Tree.nil        => Tree.nil
-  | Tree.node a l r => Tree.node a (mirror r) (mirror l)
+  | .nil        => Tree.nil
+  | .node a l r => Tree.node a (mirror r) (mirror l)
 
 theorem mirror_mirror {α : Type} (t : Tree α) :
     mirror (mirror t) = t :=
@@ -446,8 +446,8 @@ theorem mirror_mirror {α : Type} (t : Tree α) :
 
 theorem mirror_mirror_calc {α : Type} :
     ∀t : Tree α, mirror (mirror t) = t
-  | Tree.nil        => by rfl
-  | Tree.node a l r =>
+  | .nil        => by rfl
+  | .node a l r =>
     calc
       mirror (mirror (Tree.node a l r))
       = mirror (Tree.node a (mirror r) (mirror l)) :=
@@ -462,8 +462,8 @@ theorem mirror_mirror_calc {α : Type} :
 
 theorem mirror_Eq_nil_Iff {α : Type} :
     ∀t : Tree α, mirror t = Tree.nil ↔ t = Tree.nil
-  | Tree.nil        => by simp [mirror]
-  | Tree.node _ _ _ => by simp [mirror]
+  | .nil        => by simp [mirror]
+  | .node _ _ _ => by simp [mirror]
 
 
 /- ## Dependent Inductive Types (**optional**) -/

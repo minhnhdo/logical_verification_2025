@@ -4,8 +4,8 @@ Xavier Généreux, Johannes Hölzl, and Jannis Limperg. See `LICENSE.txt`. -/
 import Aesop
 import Mathlib.Algebra.Field.Defs
 import Mathlib.Algebra.Order.Ring.Abs
-import Mathlib.Algebra.BigOperators.Group.List
-import Mathlib.Algebra.BigOperators.Group.Multiset
+import Mathlib.Algebra.BigOperators.Group.List.Basic
+import Mathlib.Algebra.BigOperators.Group.Multiset.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Tree.Basic
 import Mathlib.Tactic.Linarith
@@ -151,12 +151,12 @@ instance Set.PartialOrder {α : Type} : PartialOrder (Set α) :=
       by
         intro A B C hAB hBC a ha
         aesop,
-    lt_iff_le_not_le :=
+    lt_iff_le_not_ge :=
       by
         intro A B
         apply Iff.intro
         { intro hAB
-          simp [LT.lt, LE.le] at *
+          simp [LE.le] at *
           cases hAB with
           | intro hsseq hneq =>
             apply And.intro
@@ -166,7 +166,7 @@ instance Set.PartialOrder {α : Type} : PartialOrder (Set α) :=
               apply Set.ext
               aesop } }
         { intro hAB
-          simp [LT.lt, LE.le] at *
+          simp [LE.le] at *
           aesop },
     le_antisymm      :=
       by
@@ -334,14 +334,14 @@ macro s:term "[" name:term "↦" val:term "]" : term =>
 @[simp] theorem update_apply (name : String) (val : ℕ) (s : State) :
     (s[name ↦ val]) name = val :=
   by
-    apply if_pos
+    apply ite_eq_left
     rfl
 
 @[simp] theorem update_apply_neq (name name' : String) (val : ℕ) (s : State)
       (hneq : name' ≠ name) :
     (s[name ↦ val]) name' = s name' :=
   by
-    apply if_neg
+    apply ite_eq_right
     assumption
 
 @[simp] theorem update_override (name : String) (val₁ val₂ : ℕ) (s : State) :
