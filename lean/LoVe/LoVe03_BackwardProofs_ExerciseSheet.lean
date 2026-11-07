@@ -27,35 +27,50 @@ Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem I (a : Prop) :
     a → a :=
-  sorry
+  by
+    intro n
+    exact n
 
 theorem K (a b : Prop) :
     a → b → b :=
-  sorry
+  by
+    intro _ m
+    exact m
 
 theorem C (a b c : Prop) :
     (a → b → c) → b → a → c :=
-  sorry
+  by
+    intro f m n
+    exact f n m
 
 theorem proj_fst (a : Prop) :
     a → a → a :=
-  sorry
+  by
+    intro n _
+    exact n
 
 /- Please give a different answer than for `proj_fst`: -/
 
 theorem proj_snd (a : Prop) :
     a → a → a :=
-  sorry
+  by
+    intro _ n
+    exact n
 
 theorem some_nonsense (a b c : Prop) :
     (a → b → c) → a → (a → c) → b → c :=
-  sorry
+  by
+    intro _ n g _
+    exact g n
 
 /- 1.2. Prove the contraposition rule using basic tactics. -/
 
 theorem contrapositive (a b : Prop) :
     (a → b) → ¬ b → ¬ a :=
-  sorry
+  by
+    intro f not_b a
+    apply not_b
+    exact f a
 
 /- 1.3. Prove the distributivity of `∀` over `∧` using basic tactics.
 
@@ -65,7 +80,21 @@ be necessary. -/
 
 theorem forall_and {α : Type} (p q : α → Prop) :
     (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) :=
-  sorry
+  by
+    apply Iff.intro
+    { intro f
+      apply And.intro
+      { intro x
+        have ⟨ h, _ ⟩ := f x
+        exact h }
+      { intro x
+        have ⟨ _, h ⟩ := f x
+        exact h } }
+    { intro h x
+      have ⟨ hl, hr ⟩ := h
+      apply And.intro
+      { exact hl x }
+      { exact hr x } }
 
 
 /- ## Question 2: Natural Numbers
@@ -77,23 +106,37 @@ theorem forall_and {α : Type} (p q : α → Prop) :
 
 theorem mul_zero (n : ℕ) :
     mul 0 n = 0 :=
-  sorry
+  by
+    induction n with
+    | zero => rfl
+    | succ k ih =>
+      simp [mul, ih]
+      ac_rfl
 
 #check add_succ
 theorem mul_succ (m n : ℕ) :
     mul (Nat.succ m) n = add (mul m n) n :=
-  sorry
+  by
+    induction n with
+    | zero => simp [mul, add]
+    | succ k ih => simp [mul, add, add_succ, ih, add_assoc]
 
 /- 2.2. Prove commutativity and associativity of multiplication using the
 `induction` tactic. Choose the induction variable carefully. -/
 
 theorem mul_comm (m n : ℕ) :
     mul m n = mul n m :=
-  sorry
+  by
+    induction m with
+    | zero => simp [mul, mul_zero]
+    | succ k ih => simp [mul_succ, mul, ih, add_comm]
 
 theorem mul_assoc (l m n : ℕ) :
     mul (mul l m) n = mul l (mul m n) :=
-  sorry
+  by
+    induction n with
+    | zero => rfl
+    | succ k ih => simp [mul_comm _ (k + 1), mul_succ, mul_add, mul_comm k, ih]
 
 /- 2.3. Prove the symmetric variant of `mul_add` using `rw`. To apply
 commutativity at a specific position, instantiate the rule by passing some
@@ -101,7 +144,10 @@ arguments (e.g., `mul_comm _ l`). -/
 
 theorem add_mul (l m n : ℕ) :
     mul (add l m) n = add (mul n l) (mul n m) :=
-  sorry
+  by
+    induction n with
+    | zero => simp [mul, mul_zero, add]
+    | succ k ih => simp [mul_comm _ (k + 1), mul_add]
 
 
 /- ## Question 3 (**optional**): Intuitionistic Logic
@@ -130,21 +176,55 @@ and similarly for `Peirce`. -/
 
 theorem Peirce_of_EM :
     ExcludedMiddle → Peirce :=
-  sorry
+  by
+    intro excluded_middle a b f
+    apply Or.elim (excluded_middle a)
+    { intro
+      assumption }
+    { intro not_a
+      apply f
+      intro n
+      apply False.elim
+      exact not_a n }
 
 /- 3.2 (**optional**). Prove the following implication using tactics. -/
 
 theorem DN_of_Peirce :
     Peirce → DoubleNegation :=
-  sorry
+  by
+    intro peirce a not_not_a
+    apply peirce a False
+    intro not_a
+    apply False.elim
+    apply not_not_a
+    exact not_a
 
 /- We leave the remaining implication for the homework: -/
 
 namespace SorryTheorems
 
+theorem not_or {a b : Prop} (h : ¬(a ∨ b)) :
+    ¬a ∧ ¬b :=
+  by
+    apply And.intro
+    { intro n
+      apply h
+      apply Or.intro_left
+      exact n }
+    { intro n
+      apply h
+      apply Or.intro_right
+      exact n }
+
 theorem EM_of_DN :
     DoubleNegation → ExcludedMiddle :=
-  sorry
+  by
+    intro double_negation a
+    apply double_negation (a ∨ ¬a)
+    intro h
+    have ⟨not_a, not_not_a⟩ := not_or h
+    have n := double_negation a not_not_a
+    exact not_a n
 
 end SorryTheorems
 
