@@ -27,25 +27,41 @@ Section 3.3 in the Hitchhiker's Guide. -/
 
 theorem B (a b c : Prop) :
     (a → b) → (c → a) → c → b :=
-  sorry
+  by
+    intro f g x
+    exact f (g x)
 
 theorem S (a b c : Prop) :
     (a → b → c) → (a → b) → a → c :=
-  sorry
+  by
+    intro f g x
+    exact f x (g x)
 
 theorem more_nonsense (a b c d : Prop) :
     ((a → b) → c → d) → c → b → d :=
-  sorry
+  by
+    intro f x y
+    exact f (fun _ => y) x
 
 theorem even_more_nonsense (a b c : Prop) :
     (a → b) → (a → c) → a → b → c :=
-  sorry
+  by
+    intro _ g x _
+    exact g x
 
 /- 1.2 (1 point). Prove the following theorem using basic tactics. -/
 
 theorem weak_peirce (a b : Prop) :
     ((((a → b) → a) → a) → b) → b :=
-  sorry
+  by
+    intro f
+    apply f
+    intro g
+    apply g
+    intro x
+    apply f
+    intro
+    exact x
 
 
 /- ## Question 2 (5 points): Logical Connectives
@@ -63,7 +79,16 @@ Hints:
 
 theorem herman (a : Prop) :
     ¬¬ (¬¬ a → a) :=
-  sorry
+  by
+    intro h
+    apply h
+    intro not_not_a
+    apply False.elim
+    apply not_not_a
+    intro x
+    apply h
+    intro _
+    exact x
 
 /- 2.2 (2 points). Prove the missing link in our chain of classical axiom
 implications.
@@ -88,7 +113,10 @@ Hints:
 
 theorem EM_of_DN :
     DoubleNegation → ExcludedMiddle :=
-  sorry
+  by
+    intro double_negation a
+    apply double_negation (a ∨ ¬a)
+    simp
 
 /- 2.3 (2 points). We have proved three of the six possible implications
 between `ExcludedMiddle`, `Peirce`, and `DoubleNegation`. State and prove the
@@ -99,6 +127,30 @@ three missing implications, exploiting the three theorems we already have. -/
 #check EM_of_DN
 
 -- enter your solution here
+
+theorem EM_of_Peirce : Peirce → ExcludedMiddle := EM_of_DN ∘ DN_of_Peirce
+
+theorem Peirce_of_DN :
+    DoubleNegation → Peirce :=
+  by
+    intro double_negation a b f
+    apply double_negation a
+    intro not_a
+    apply not_a
+    apply f
+    intro x
+    apply False.elim
+    exact not_a x
+
+theorem DN_of_EM :
+    ExcludedMiddle → DoubleNegation :=
+  by
+    intro excluded_middle a not_not_a
+    cases excluded_middle a with
+    | inl => assumption
+    | inr not_a =>
+      apply False.elim
+      exact not_not_a not_a
 
 end BackwardProofs
 
