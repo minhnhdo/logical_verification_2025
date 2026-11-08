@@ -19,48 +19,82 @@ namespace LoVe
 
 theorem I (a : Prop) :
     a → a :=
-  sorry
+  assume x : a
+  show a from x
 
 theorem K (a b : Prop) :
     a → b → b :=
-  sorry
+  assume _x : a
+  assume y : b
+  show b from y
 
 theorem C (a b c : Prop) :
     (a → b → c) → b → a → c :=
-  sorry
+  assume f : a → b → c
+  assume y : b
+  assume x : a
+  show c from f x y
 
 theorem proj_fst (a : Prop) :
     a → a → a :=
-  sorry
+  assume x : a
+  assume _y : a
+  show a from x
 
 /- Please give a different answer than for `proj_fst`. -/
 
 theorem proj_snd (a : Prop) :
     a → a → a :=
-  sorry
+  assume _x : a
+  assume y : a
+  show a from y
 
 theorem some_nonsense (a b c : Prop) :
     (a → b → c) → a → (a → c) → b → c :=
-  sorry
+  assume _f : a → b → c
+  assume x : a
+  assume g : a → c
+  assume _y : b
+  show c from g x
 
 /- 1.2. Supply a structured proof of the contraposition rule. -/
 
 theorem contrapositive (a b : Prop) :
     (a → b) → ¬ b → ¬ a :=
-  sorry
+  assume f : a → b
+  assume not_b : ¬b
+  show ¬a from not_b ∘ f
 
 /- 1.3. Supply a structured proof of the distributivity of `∀` over `∧`. -/
 
 theorem forall_and {α : Type} (p q : α → Prop) :
     (∀x, p x ∧ q x) ↔ (∀x, p x) ∧ (∀x, q x) :=
-  sorry
+  Iff.intro
+    ( assume f : ∀ x : α, p x ∧ q x
+      show (∀ (x : α), p x) ∧ ∀ (x : α), q x from
+        And.intro
+          ( assume x : α
+            show p x from
+              And.left (f x))
+          ( assume x : α
+            show q x from
+              And.right (f x)))
+    ( assume pair : (∀ (x : α), p x) ∧ ∀ (x : α), q x
+      assume x : α
+      have ⟨l, r⟩ := pair
+      show p x ∧ q x from
+        And.intro (l x) (r x))
 
 /- 1.4 (**optional**). Supply a structured proof of the following property,
 which can be used to pull a `∀` quantifier past an `∃` quantifier. -/
 
 theorem forall_exists_of_exists_forall {α : Type} (p : α → α → Prop) :
     (∃x, ∀y, p x y) → (∀y, ∃x, p x y) :=
-  sorry
+  assume pair : ∃x, ∀y, p x y
+  assume y : α
+  have ⟨x, f⟩ := pair
+  show ∃x, p x y from
+    Exists.intro x (f y)
 
 
 /- ## Question 2: Chain of Equalities
@@ -79,7 +113,11 @@ Hint: This is a difficult question. You might need the tactics `simp` and
 
 theorem binomial_square (a b : ℕ) :
     (a + b) * (a + b) = a * a + 2 * a * b + b * b :=
-  sorry
+  calc
+    (a + b) * (a + b) = a * (a + b) + b * (a + b) := by simp [add_mul]
+    _ = a * a + a * b + b * a + b * b := by simp [mul_add, add_assoc]
+    _ = a * a + a * b + a * b + b * b := by simp [mul_comm]
+    _ = a * a + 2 * a * b + b * b := by simp [add_assoc, Nat.two_mul, add_mul]
 
 /- 2.2 (**optional**). Prove the same argument again, this time as a structured
 proof, with `have` steps corresponding to the `calc` equations. Try to reuse as
@@ -87,7 +125,16 @@ much of the above proof idea as possible, proceeding mechanically. -/
 
 theorem binomial_square₂ (a b : ℕ) :
     (a + b) * (a + b) = a * a + 2 * a * b + b * b :=
-  sorry
+  have first_step : (a + b) * (a + b) = a * (a + b) + b * (a + b) :=
+    by simp [add_mul]
+  have second_step : a * (a + b) + b * (a + b) = a * a + a * b + b * a + b * b :=
+    by simp [mul_add, add_assoc]
+  have third_step : a * a + a * b + b * a + b * b = a * a + a * b + a * b + b * b :=
+    by simp [mul_comm]
+  have final_step : a * a + a * b + a * b + b * b = a * a + 2 * a * b + b * b :=
+    by simp [add_assoc, Nat.two_mul, add_mul]
+  show (a + b) * (a + b) = a * a + 2 * a * b + b * b by
+    rw [first_step, second_step, third_step, final_step]
 
 
 /- ## Question 3 (**optional**): One-Point Rules
