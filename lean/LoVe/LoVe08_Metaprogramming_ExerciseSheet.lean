@@ -41,6 +41,8 @@ conjunctions are gone. Define your tactic as a macro. -/
 #check repeat'
 
 -- enter your definition here
+macro "intro_and" : tactic =>
+  `(tactic| repeat' apply And.intro)
 
 theorem abcd_bd (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
     b ∧ d :=
@@ -117,7 +119,15 @@ Hint: When iterating over the declarations in the local context, make sure to
 skip any declaration that is an implementation detail. -/
 
 partial def casesAnd : TacticM Unit :=
-  sorry
+  withMainContext
+    (do
+      let lctx ← getLCtx
+      for ldecl in lctx do
+        if ! ldecl.isImplementationDetail then
+          let ty ← inferType ldecl.toExpr
+          if Expr.isAppOfArity ty ``And 2 then
+            cases ldecl.fvarId
+            casesAnd)
 
 elab "cases_and" : tactic =>
   casesAnd
@@ -143,7 +153,10 @@ theorem abcd_bd_again (a b c d : Prop) :
 directly by `assumption`. -/
 
 macro "destro_and" : tactic =>
-  sorry
+  `(tactic|
+    (cases_and
+     intro_and
+     repeat' assumption))
 
 theorem abcd_bd_over_again (a b c d : Prop) (h : a ∧ (b ∧ c) ∧ d) :
     b ∧ d :=
@@ -171,7 +184,11 @@ theorem abd_bacb_again (a b c d : Prop) (h : a ∧ b ∧ d) :
 it works as expected also on more complicated examples. -/
 
 -- enter your examples here
-
+theorem and_example (a b c d e : Prop) (h : a ∧ b ∧ c ∧ d) :
+    b ∧ ((d ∧ c) ∧ a) ∧ e :=
+  by
+    destro_and
+    sorry
 
 /- ## Question 2: A Theorem Finder
 
@@ -190,7 +207,15 @@ Hints:
   `||`, the "and" connective is called `&&`, and equality is called `==`. -/
 
 def constInExpr (name : Name) (e : Expr) : Bool :=
-  sorry
+  match e with
+  | Expr.const n _ => n == name
+  | Expr.app f a => constInExpr name f || constInExpr name a
+  | Expr.lam _ ty e _ => constInExpr name ty || constInExpr name e
+  | Expr.forallE _ ty e _ => constInExpr name ty || constInExpr name e
+  | Expr.letE _ ty v e _ => constInExpr name ty || constInExpr name v || constInExpr name e
+  | Expr.mdata _ e => constInExpr name e
+  | Expr.proj _ _ e => constInExpr name e
+  | _ => false
 
 /- 2.2. Write a function that checks whether an expression contains **all**
 constants in a list.
@@ -198,7 +223,7 @@ constants in a list.
 Hint: You can either proceed recursively or use `List.and` and `List.map`. -/
 
 def constsInExpr (names : List Name) (e : Expr) : Bool :=
-  sorry
+  names.map (fun n ↦ constInExpr n e) |> List.and
 
 /- 2.3. Develop a tactic that uses `constsInExpr` to print the name of all
 theorems that contain all constants `names` in their statement.
@@ -207,7 +232,12 @@ This code should be similar to that of `proveDirect` in the demo file. With
 `ConstantInfo.type`, you can extract the proposition associated with a theorem. -/
 
 def findConsts (names : List Name) : TacticM Unit :=
-  sorry
+  do
+    let env ← getEnv
+    for (name, info) in SMap.toList env.constants do
+      if info.isTheorem && ! info.isUnsafe then
+        if constsInExpr names info.type then
+          logInfo m!"Found all names in {name}"
 
 elab "find_consts" "(" names:ident+ ")" : tactic =>
   findConsts (Array.toList (Array.map getId names))
