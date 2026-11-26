@@ -264,11 +264,11 @@ theorem sillyLoop_from_1_BigStep :
   by
     rw [sillyLoop]
     apply BigStep.while_true
-    { simp }
+    { simp [State.update] }
     { apply BigStep.seq
       { apply BigStep.skip }
       { apply BigStep.assign } }
-    { simp
+    { simp [State.update, update_override "x" 0 1 fun _ => 0]
       apply BigStep.while_false
       simp }
 
@@ -518,7 +518,7 @@ theorem sillyLoop_from_1_SmallStep :
     { apply SmallStep.whileDo }
     { apply RTC.head
       { apply SmallStep.if_true
-        aesop }
+        simp [State.update] }
       { apply RTC.head
         { apply SmallStep.seq_step
           apply SmallStep.seq_skip }
@@ -531,8 +531,8 @@ theorem sillyLoop_from_1_SmallStep :
               { apply SmallStep.whileDo }
               { apply RTC.head
                 { apply SmallStep.if_false
-                  simp }
-                { simp
+                  simp [State.update] }
+                { simp [State.update, update_override "x" 0 1 fun _ => 0]
                   apply RTC.refl } } } } } } }
 
 /- Equipped with a small-step semantics, we can **define** a big-step
